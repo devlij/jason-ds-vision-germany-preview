@@ -20,13 +20,12 @@ jobs:
                   aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
                   aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
                   region_name='auto')
-              resp = s3.list_buckets()
-              print(f"R2 CONNECTIVITY: SUCCESS - {len(resp['Buckets'])} buckets visible")
-              for b in resp['Buckets'][:5]:
-                  print(f"  Bucket: {b['Name']}")
+              # Bucket-scoped token: test via ListObjects on the Germany bucket
               objs = s3.list_objects_v2(Bucket='jdvision-germany-assets', MaxKeys=5)
               count = objs.get('KeyCount', 0)
-              print(f"Germany bucket objects: {count}")
+              print(f"R2 CONNECTIVITY: SUCCESS - Germany bucket accessible, {count} objects")
+              for obj in objs.get('Contents', [])[:3]:
+                  print(f"  {obj['Key']} ({obj['Size']} bytes)")
           except Exception as e:
               print(f"R2 CONNECTIVITY: FAILED - {type(e).__name__}: {str(e)[:200]}")
               sys.exit(1)
