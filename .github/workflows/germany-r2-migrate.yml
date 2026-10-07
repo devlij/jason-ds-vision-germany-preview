@@ -50,7 +50,7 @@ jobs:
             rclone lsf assets/ --recursive | head -20
             echo "..."
             echo "Total files: $(rclone lsf assets/ --recursive | wc -l)"
-            echo "Total size: $(rclone size assets/ --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(f"{d[\"bytes\"]/1024/1024/1024:.1f} GB")')"
+            echo "Total size: $(rclone size assets/ --json | jq -r '.bytes | ./1024/1024/1024 | tostring | .[0:4] + \" GB\"')"
           else
             echo "=== LIVE MIGRATION: copying to R2 ==="
             rclone copy assets/ r2:jdvision-germany-assets/ \
