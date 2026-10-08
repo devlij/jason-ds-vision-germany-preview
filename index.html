@@ -13837,6 +13837,20 @@
         if (isDay && ntab) { ntab.classList.remove('is-active'); ntab.setAttribute('aria-pressed', 'false'); }
         applyMode();
       });
+      /* D094 fix: Night button was dead (no click handler). Clicking Night now
+         clears Genuine daylight, Daylight, and Postcard, ensuring only one
+         mode shows pressed at a time. */
+      if (ntab) ntab.addEventListener('click', e => {
+        e.preventDefault();
+        stopMotion();
+        const isNight = !ntab.classList.contains('is-active');
+        ntab.classList.toggle('is-active', isNight);
+        ntab.setAttribute('aria-pressed', isNight ? 'true' : 'false');
+        if (isNight && gtab) { gtab.classList.remove('is-active'); gtab.setAttribute('aria-pressed', 'false'); }
+        if (isNight && dtab) { dtab.classList.remove('is-active'); dtab.setAttribute('aria-pressed', 'false'); dtab.setAttribute('data-daynight', 'night'); }
+        if (isNight && pctab) { pctab.classList.remove('is-active'); pctab.setAttribute('aria-pressed', 'false'); }
+        applyMode();
+      });
       /* Genuine daylight toggle (Round 2): rendered only where genuine-daylight masters exist. */
       if (gtab) gtab.addEventListener('click', e => {
         e.preventDefault();
@@ -13849,6 +13863,20 @@
            and this button never reaches the daylight master. */
         if (isDay && pctab) { pctab.classList.remove('is-active'); pctab.setAttribute('aria-pressed', 'false'); }
         if (isDay && ntab) { ntab.classList.remove('is-active'); ntab.setAttribute('aria-pressed', 'false'); }
+        applyMode();
+      });
+      /* D094 fix: Night button was dead (no click handler). Clicking Night now
+         clears Genuine daylight, Daylight, and Postcard, ensuring only one
+         mode shows pressed at a time. */
+      if (ntab) ntab.addEventListener('click', e => {
+        e.preventDefault();
+        stopMotion();
+        const isNight = !ntab.classList.contains('is-active');
+        ntab.classList.toggle('is-active', isNight);
+        ntab.setAttribute('aria-pressed', isNight ? 'true' : 'false');
+        if (isNight && gtab) { gtab.classList.remove('is-active'); gtab.setAttribute('aria-pressed', 'false'); }
+        if (isNight && dtab) { dtab.classList.remove('is-active'); dtab.setAttribute('aria-pressed', 'false'); dtab.setAttribute('data-daynight', 'night'); }
+        if (isNight && pctab) { pctab.classList.remove('is-active'); pctab.setAttribute('aria-pressed', 'false'); }
         applyMode();
       });
       /* Postcard toggle: the button markup is already on the cards. This handler
