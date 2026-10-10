@@ -14672,6 +14672,55 @@ button.lb-narrate.playing{background:#5a4c34}
     narrEl=np;
     np.addEventListener('click', function(e){ e.stopPropagation(); if(window.__narrToggle) window.__narrToggle(curNarrSrc, np); });
   })();
+  /* Narrated tour mode: headphones button; auto-advances on narration end. */
+  var tourBtn=null, tourActive=false;
+  (function(){
+    var tb=document.createElement('button');
+    tb.type='button'; tb.className='lb-narrate'; tb.setAttribute('aria-label','Start narrated tour');
+    tb.textContent='\uD83C\uDFA7'; tb.style.display='none';
+    overlay.querySelector('.lb-controls').appendChild(tb);
+    tourBtn=tb;
+    function setTourUI(on){
+      tb.classList.toggle('playing', on);
+      tb.setAttribute('aria-label', on?'Stop narrated tour':'Start narrated tour');
+    }
+    function tourAdvance(){
+      if(!tourActive) return;
+      if(!overlay.classList.contains('open')){ tourActive=false; setTourUI(false); return; }
+      nav(1);
+      /* nav->show() updates curNarrSrc and stops playback; start next narration */
+      setTimeout(function(){
+        if(!tourActive) return;
+        if(!overlay.classList.contains('open')){ tourActive=false; setTourUI(false); return; }
+        if(curNarrSrc && window.__narrToggle && narrEl){
+          window.__narrTourNext=tourAdvance;
+          window.__narrToggle(curNarrSrc, narrEl);
+        } else {
+          /* No narration for this scene: skip ahead */
+          tourAdvance();
+        }
+      }, 350);
+    }
+    tb.addEventListener('click', function(e){
+      e.stopPropagation();
+      if(tourActive){
+        tourActive=false; setTourUI(false);
+        window.__narrTourNext=null;
+        if(window.__narrStop) window.__narrStop();
+        return;
+      }
+      tourActive=true; setTourUI(true);
+      if(curNarrSrc && window.__narrToggle && narrEl){
+        window.__narrTourNext=tourAdvance;
+        window.__narrToggle(curNarrSrc, narrEl);
+      } else {
+        tourAdvance();
+      }
+    });
+    /* Expose for show()/hide() integration */
+    window.__tourStop=function(){ tourActive=false; window.__narrTourNext=null; if(tourBtn) setTourUI(false); };
+    window.__tourSyncBtn=function(){ if(tourBtn){ tourBtn.style.display=curNarrSrc?'':'none'; if(!tourActive) setTourUI(false); } };
+  })();
   var items = [], idx = 0;
   var playing = false, timer = null;
   var INTERVAL = 4000; /* Jason 2026-09-28: 4s autoplay */
@@ -14734,6 +14783,7 @@ button.lb-narrate.playing{background:#5a4c34}
     if(window.__narrStop) window.__narrStop();
     curNarrSrc=narrMap()[items[idx].id]||'';
     if(narrEl){ narrEl.style.display=curNarrSrc?'':'none'; narrEl.classList.remove('playing'); narrEl.textContent='\uD83D\uDD0A'; narrEl.setAttribute('aria-label','Listen to scene narration'); }
+    if(window.__tourSyncBtn) window.__tourSyncBtn();
   }
   function setPlaying(on){
     playing = on;
@@ -14771,6 +14821,7 @@ button.lb-narrate.playing{background:#5a4c34}
   }
   function hide(){
     stopSlideshow();
+    if(window.__tourStop) window.__tourStop();
     if(window.__narrStop) window.__narrStop();
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
@@ -14901,7 +14952,7 @@ button.lb-narrate.playing{background:#5a4c34}
     if(btn===activeBtn&&audio&&!audio.paused){ stop(); return; }
     stop();
     audio=new Audio(src); activeBtn=btn; setBtn(btn,true);
-    audio.onended=stop; audio.onerror=stop;
+    audio.onended=function(){ try{ if(window.__narrTourNext){ var f=window.__narrTourNext; window.__narrTourNext=null; f(); return; } }catch(e){} stop(); }; audio.onerror=stop;
     try{ var p=audio.play(); if(p&&p.catch) p.catch(stop); }catch(e){ stop(); }
   };
   Object.keys(map).forEach(function(id){
